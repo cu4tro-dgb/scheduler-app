@@ -1,0 +1,12 @@
+@import 'tailwindcss';
+@import '@nuxt/ui-pro';
+
+/* Crear una regla para el eslint */
+
+@theme {
+  --font-sans: 'Inter', 'sans-serif';
+}
+
+body {
+  letter-spacing: -0.025em;
+}
