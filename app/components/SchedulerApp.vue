@@ -1,7 +1,22 @@
 <template>
-    <FullCalendar ref="fullCalendar" :options="calendarOptions">
-      <template #event-content="{ event }">
-        <span class="font-bold block">{{ event.title }}</span>
+  <FullCalendar ref="fullCalendar" :options="calendarOptions">
+    <template #event-content="{ event, view }">
+      <template v-if="view.type === 'dayGridMonth'">
+        <span class="text-xs text-muted font-bold">
+          <time>
+            {{ formatInTimeZone(event.start, 'America/Lima', 'HH:mm') }}
+          </time>
+          -
+          <time>
+            {{ formatInTimeZone(event.end, 'America/Lima', 'HH:mm') }}
+          </time>
+        </span>
+        <br>
+        <span class="font-bold text-highlighted">{{ event.title }}</span>
+      </template>
+      <template v-else>
+        <span class="font-bold block text-highlighted">{{ event.title }}</span>
+
         <span class="text-base text-muted font-bold block">
           <time>
             {{ formatInTimeZone(event.start, 'America/Lima', 'HH:mm') }}
@@ -11,12 +26,14 @@
             {{ formatInTimeZone(event.end, 'America/Lima', 'HH:mm') }}
           </time>
         </span>
-        <span class="text-base font-bold block">
+
+        <span class="text-base font-bold block text-highlighted">
           {{ event.extendedProps.resourceId }}
         </span>
       </template>
-      <template #header-content="{ event }">{{ event }}</template>
-    </FullCalendar>
+    </template>
+    <template #header-content="{ event }">{{ event }}</template>
+  </FullCalendar>
 </template>
 
 <script lang="ts" setup>
@@ -92,7 +109,10 @@ const calendarOptions = ref<CalendarOptions>({
   locale: 'es',
   select: handleDateSelect,
   eventClick: handleEventClick,
-  eventsSet: handleEvents // <- Se llama cuando los eventos se inican o se actualizan
+  eventClassNames: (arg) => {
+    return [`evento-${arg.event.extendedProps.resourceId}`]
+  },
+  eventsSet: handleEvents // <- Se llama cuando los eventos se inican o se actualizan,
 })
 
 async function handleDateSelect(selectInfo: DateSelectArg) {
@@ -227,5 +247,23 @@ th.fc-day {
 
 .fc-event {
   border-radius: 1rem;
+}
+
+.fc-daygrid-dot-event {
+  display: block !important;
+  padding: 0.7em 0.9em !important;
+}
+
+.evento-m1 {
+  background-color: #b9d9ff !important;
+  border-color: #b9d9ff !important;
+}
+.evento-m2 {
+  background-color: #fbd484 !important;
+  border-color: #fbd484 !important;
+}
+.evento-m3 {
+  background-color: #bfb0fe !important;
+  border-color: #bfb0fe !important;
 }
 </style>

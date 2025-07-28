@@ -1,7 +1,7 @@
 <template>
   <UCard
     :ui="{
-      root: 'p-3 bg-white/5 rounded-2xl text-sm space-y-3 relative',
+      root: 'p-3 bg-elevated rounded-2xl text-sm space-y-3 relative',
       footer: 'sm:p-0 space-x-2',
       body: 'sm:p-0 font-semibold',
       header: 'sm:p-0'

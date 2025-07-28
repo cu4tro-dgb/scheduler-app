@@ -75,16 +75,18 @@
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
 import type { Events, TUpdateEvent } from '~/types/events'
+import { toDate } from 'date-fns-tz'
+import { LazyModalConfirmEvent } from '#components'
 
 const props = defineProps<{ event: Partial<Events> }>()
 
 const emit = defineEmits<{ close: [boolean] }>()
 
-const { events } = useEvents()
-
-const { machines } = useMachine()
-
 const toast = useToast()
+
+const { events } = useEvents()
+const { machines } = useMachine()
+const calendar = useCalendar()
 
 const eventSchema = z.object({
   id: z.string().optional(),
@@ -106,16 +108,55 @@ onMounted(() => {
   eventState.resourceId = props.event?.resourceId
 })
 
+function isOverlappingEvent(
+  start: string,
+  end: string,
+  resourceId: string
+): any[] | null {
+  const existingEvents = calendar.calendarApi.value?.getEvents() ?? []
+
+  const startEvent = toDate(start, { timeZone: 'America/Lima' })
+  const endEvent = toDate(end, { timeZone: 'America/Lima' })
+
+  return (
+    existingEvents.filter((ev) => {
+      const sameMachine = ev.extendedProps?.resourceId === resourceId
+
+      const eStart = toDate(ev.startStr, { timeZone: 'America/Lima' }) // <- Eventos existtente
+      const eEnd = toDate(ev.endStr, { timeZone: 'America/Lima' })
+
+      const isOverlapping = startEvent < eEnd && endEvent > eStart
+
+      return sameMachine && isOverlapping
+    }) || null
+  )
+}
+
+const overlay = useOverlay()
+
 const submitCreateEvent = async (body: FormSubmitEvent<EventForm>) => {
-  if (body.data.id) { // <- Actualizar
+  const { start, end, resourceId, id, title } = body.data
+
+  const overlappingEvents = isOverlappingEvent(start, end, resourceId)
+  if (overlappingEvents && overlappingEvents.length > 0) {
+    const modalConfirm = overlay.create(LazyModalConfirmEvent)
+    modalConfirm.open({
+      event: body.data,
+      overlappingEvents: overlappingEvents
+    })
+    return
+  }
+
+  if (id) {
+    // <- Actualizar
     events.value = events.value.map((ev: TUpdateEvent) => {
-      if (ev.id === body.data.id) {
+      if (ev.id === id) {
         return {
-          id: body.data.id,
-          end: body.data.end,
-          start: body.data.start,
-          resourceId: body.data.resourceId,
-          title: body.data.title
+          id: id,
+          end: end,
+          start: start,
+          resourceId: resourceId,
+          title: title
         }
       }
       return ev
@@ -130,10 +171,10 @@ const submitCreateEvent = async (body: FormSubmitEvent<EventForm>) => {
     emit('close', true)
   } else {
     useCalendar().addEvent({
-      title: body.data.title,
-      start: body.data.start,
-      end: body.data.end,
-      resourceId: body.data.resourceId
+      title: title,
+      start: start,
+      end: end,
+      resourceId: resourceId
     })
 
     toast.add({

@@ -3,7 +3,7 @@
     v-model="value"
     :items="machines"
     :ui="{
-      root: 'p-3 bg-white/5 rounded-2xl',
+      root: 'p-3 bg-elevated rounded-2xl',
       legend: 'font-semibold text-base'
     }"
     label-key="title"
